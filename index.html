@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Typing Master</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a2e;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #16213e;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 80%;
+            max-width: 800px;
+            text-align: center;
+        }
+        #text-display {
+            font-size: 24px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+            letter-spacing: 1px;
+            background: #0f3460;
+            padding: 20px;
+            border-radius: 10px;
+            min-height: 100px;
+        }
+        #input-field {
+            width: 90%;
+            padding: 15px;
+            font-size: 18px;
+            border-radius: 5px;
+            border: none;
+            outline: none;
+            background: #e94560;
+            color: white;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            font-size: 20px;
+        }
+        .highlight { color: #4ecca3; }
+        button {
+            margin-top: 20px;
+            padding: 10px 25px;
+            background: #4ecca3;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>AR Typing Tutor</h1>
+    <div id="text-display">Loading text...</div>
+    <input type="text" id="input-field" placeholder="Start typing here..." autofocus>
+    
+    <div class="stats">
+        <div>Time: <span id="timer" class="highlight">60</span>s</div>
+        <div>WPM: <span id="wpm" class="highlight">0</span></div>
+        <div>Accuracy: <span id="accuracy" class="highlight">100</span>%</div>
+    </div>
+    <button onclick="resetGame()">Reset Test</button>
+</div>
+
+<script>
+    const textDisplay = document.getElementById('text-display');
+    const inputField = document.getElementById('input-field');
+    const timerDisplay = document.getElementById('timer');
+    const wpmDisplay = document.getElementById('wpm');
+    const accuracyDisplay = document.getElementById('accuracy');
+
+    let sampleText = "The quick brown fox jumps over the lazy dog. Programming is the art of telling another human being what they want the computer to do. Success is not final, failure is not fatal: it is the courage to continue that counts.";
+    let timeLeft = 60;
+    let timer = null;
+    let isStarted = false;
+
+    function init() {
+        textDisplay.innerText = sampleText;
+    }
+
+    inputField.addEventListener('input', () => {
+        if (!isStarted) {
+            startTimer();
+            isStarted = true;
+        }
+        checkTyping();
+    });
+
+    function startTimer() {
+        timer = setInterval(() => {
+            if (timeLeft > 0) {
+                timeLeft--;
+                timerDisplay.innerText = timeLeft;
+                calculateStats();
+            } else {
+                clearInterval(timer);
+                inputField.disabled = true;
+                alert("Time's up! Your final WPM is " + wpmDisplay.innerText);
+            }
+        }, 1000);
+    }
+
+    function checkTyping() {
+        const arrayQuote = textDisplay.innerText.split('');
+        const arrayValue = inputField.value.split('');
+        
+        let errors = 0;
+        arrayValue.forEach((char, index) => {
+            if (char !== arrayQuote[index]) errors++;
+        });
+
+        let acc = ((arrayValue.length - errors) / arrayValue.length) * 100;
+        accuracyDisplay.innerText = arrayValue.length > 0 ? Math.round(acc) : 100;
+    }
+
+    function calculateStats() {
+        let words = inputField.value.trim().split(/\s+/).length;
+        let minutes = (60 - timeLeft) / 60;
+        if (minutes > 0) {
+            wpmDisplay.innerText = Math.round(words / minutes);
+        }
+    }
+
+    function resetGame() {
+        location.reload();
+    }
+
+    init();
+</script>
+
+</body>
+</html>
