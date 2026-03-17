@@ -1,148 +1,279 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pa">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AR Typing Master</title>
+    <title>AR Typing Tutor - Pro</title>
     <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+            --accent: #38bdf8;
+            --correct: #22c55e;
+            --wrong: #ef4444;
+        }
+
+        .light-mode {
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --text: #0f172a;
+            --accent: #0284c7;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1a1a2e;
-            color: white;
+            background-color: var(--bg);
+            color: var(--text);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            transition: 0.3s;
         }
+
         .container {
-            background-color: #16213e;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            width: 80%;
-            max-width: 800px;
+            background: var(--card);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 700px;
             text-align: center;
         }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 10px rgba(56, 189, 248, 0.3);
+        }
+
+        .mode-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 30px;
+            border: none;
+            background: var(--accent);
+            color: white;
+            font-weight: bold;
+        }
+
         #text-display {
-            font-size: 24px;
+            font-size: 1.4rem;
+            line-height: 1.6;
             margin-bottom: 20px;
-            line-height: 1.5;
-            letter-spacing: 1px;
-            background: #0f3460;
-            padding: 20px;
+            padding: 15px;
+            background: rgba(0,0,0,0.1);
             border-radius: 10px;
             min-height: 100px;
         }
-        #input-field {
-            width: 90%;
+
+        .highlight-correct { color: var(--correct); }
+        .highlight-wrong { color: var(--wrong); text-decoration: underline; }
+
+        textarea {
+            width: 100%;
+            height: 100px;
             padding: 15px;
-            font-size: 18px;
-            border-radius: 5px;
-            border: none;
+            border-radius: 10px;
+            border: 2px solid var(--accent);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 1.1rem;
+            resize: none;
             outline: none;
-            background: #e94560;
-            color: white;
+            box-sizing: border-box;
         }
-        .stats {
+
+        .stats-container {
             display: flex;
             justify-content: space-around;
             margin-top: 20px;
-            font-size: 20px;
-        }
-        .highlight { color: #4ecca3; }
-        button {
-            margin-top: 20px;
-            padding: 10px 25px;
-            background: #4ecca3;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
             font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .stat-box {
+            background: rgba(56, 189, 248, 0.1);
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 1px solid var(--accent);
+        }
+
+        .level-btns {
+            margin-bottom: 15px;
+        }
+
+        .level-btns button {
+            margin: 5px;
+            padding: 8px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            border: 1px solid var(--accent);
+            background: transparent;
+            color: var(--text);
+        }
+
+        .level-btns button.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        button.reset-btn {
+            margin-top: 20px;
+            padding: 10px 30px;
+            background: var(--correct);
+            border: none;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>AR Typing Tutor</h1>
-    <div id="text-display">Loading text...</div>
-    <input type="text" id="input-field" placeholder="Start typing here..." autofocus>
-    
-    <div class="stats">
-        <div>Time: <span id="timer" class="highlight">60</span>s</div>
-        <div>WPM: <span id="wpm" class="highlight">0</span></div>
-        <div>Accuracy: <span id="accuracy" class="highlight">100</span>%</div>
-    </div>
-    <button onclick="resetGame()">Reset Test</button>
-</div>
+    <button class="mode-toggle" onclick="toggleTheme()">🌓 Change Theme</button>
 
-<script>
-    const textDisplay = document.getElementById('text-display');
-    const inputField = document.getElementById('input-field');
-    const timerDisplay = document.getElementById('timer');
-    const wpmDisplay = document.getElementById('wpm');
-    const accuracyDisplay = document.getElementById('accuracy');
-
-    let sampleText = "The quick brown fox jumps over the lazy dog. Programming is the art of telling another human being what they want the computer to do. Success is not final, failure is not fatal: it is the courage to continue that counts.";
-    let timeLeft = 60;
-    let timer = null;
-    let isStarted = false;
-
-    function init() {
-        textDisplay.innerText = sampleText;
-    }
-
-    inputField.addEventListener('input', () => {
-        if (!isStarted) {
-            startTimer();
-            isStarted = true;
-        }
-        checkTyping();
-    });
-
-    function startTimer() {
-        timer = setInterval(() => {
-            if (timeLeft > 0) {
-                timeLeft--;
-                timerDisplay.innerText = timeLeft;
-                calculateStats();
-            } else {
-                clearInterval(timer);
-                inputField.disabled = true;
-                alert("Time's up! Your final WPM is " + wpmDisplay.innerText);
-            }
-        }, 1000);
-    }
-
-    function checkTyping() {
-        const arrayQuote = textDisplay.innerText.split('');
-        const arrayValue = inputField.value.split('');
+    <div class="container">
+        <h1>AR Typing Tutor</h1>
         
-        let errors = 0;
-        arrayValue.forEach((char, index) => {
-            if (char !== arrayQuote[index]) errors++;
+        <div class="level-btns">
+            <button onclick="setLevel('easy')" id="btn-easy" class="active">Easy</button>
+            <button onclick="setLevel('medium')" id="btn-medium">Medium</button>
+            <button onclick="setLevel('hard')" id="btn-hard">Hard</button>
+        </div>
+
+        <div id="text-display">Loading text...</div>
+
+        <textarea id="input-field" placeholder="Type here to start..." spellcheck="false"></textarea>
+
+        <div class="stats-container">
+            <div class="stat-box">Time: <span id="timer">60</span>s</div>
+            <div class="stat-box">WPM: <span id="wpm">0</span></div>
+            <div class="stat-box">Acc: <span id="accuracy">100</span>%</div>
+        </div>
+
+        <button class="reset-btn" onclick="resetGame()">Reset Test</button>
+    </div>
+
+    <audio id="key-sound" src="https://www.soundjay.com/communication/typewriter-key-1.mp3"></audio>
+
+    <script>
+        const texts = {
+            easy: ["The cat is black.", "I love coding.", "Sun rises in east.", "Keep it simple."],
+            medium: ["Programming is the art of telling a computer what to do.", "Success is not final, failure is not fatal.", "Practice makes a man perfect."],
+            hard: ["Synchronous communication requires immediate attention while asynchronous does not.", "Developing a professional website requires patience and constant learning.", "Artificial intelligence is transforming the digital world."]
+        };
+
+        let currentLevel = 'easy';
+        let timer = 60;
+        let interval = null;
+        let isStarted = false;
+        let totalChars = 0;
+
+        const display = document.getElementById('text-display');
+        const input = document.getElementById('input-field');
+        const timerEl = document.getElementById('timer');
+        const wpmEl = document.getElementById('wpm');
+        const accEl = document.getElementById('accuracy');
+        const keySound = document.getElementById('key-sound');
+
+        function setLevel(lvl) {
+            currentLevel = lvl;
+            document.querySelectorAll('.level-btns button').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-' + lvl).classList.add('active');
+            resetGame();
+        }
+
+        function loadText() {
+            const levelTexts = texts[currentLevel];
+            display.innerText = levelTexts[Math.floor(Math.random() * levelTexts.length)];
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+        }
+
+        input.addEventListener('input', () => {
+            if (!isStarted) {
+                startTimer();
+                isStarted = true;
+            }
+            
+            // Play Sound
+            keySound.currentTime = 0;
+            keySound.play();
+
+            const quote = display.innerText.split('');
+            const val = input.value.split('');
+            let html = '';
+            let correct = 0;
+
+            quote.forEach((char, i) => {
+                if (val[i] == null) {
+                    html += `<span>${char}</span>`;
+                } else if (val[i] === char) {
+                    html += `<span class="highlight-correct">${char}</span>`;
+                    correct++;
+                } else {
+                    html += `<span class="highlight-wrong">${char}</span>`;
+                }
+            });
+
+            display.innerHTML = html;
+            
+            // Stats
+            let acc = (correct / (val.length || 1)) * 100;
+            accEl.innerText = Math.round(acc);
+
+            if (val.length >= quote.length) {
+                totalChars += val.length;
+                input.value = "";
+                loadText();
+            }
         });
 
-        let acc = ((arrayValue.length - errors) / arrayValue.length) * 100;
-        accuracyDisplay.innerText = arrayValue.length > 0 ? Math.round(acc) : 100;
-    }
+        function startTimer() {
+            interval = setInterval(() => {
+                timer--;
+                timerEl.innerText = timer;
+                
+                // WPM calculation
+                let words = (totalChars + input.value.length) / 5;
+                let minutes = (60 - timer) / 60;
+                wpmEl.innerText = Math.round(words / minutes) || 0;
 
-    function calculateStats() {
-        let words = inputField.value.trim().split(/\s+/).length;
-        let minutes = (60 - timeLeft) / 60;
-        if (minutes > 0) {
-            wpmDisplay.innerText = Math.round(words / minutes);
+                if (timer === 0) {
+                    clearInterval(interval);
+                    input.disabled = true;
+                    alert("Time's up! Your WPM: " + wpmEl.innerText);
+                }
+            }, 1000);
         }
-    }
 
-    function resetGame() {
-        location.reload();
-    }
+        function resetGame() {
+            clearInterval(interval);
+            timer = 60;
+            isStarted = false;
+            totalChars = 0;
+            input.value = "";
+            input.disabled = false;
+            timerEl.innerText = timer;
+            wpmEl.innerText = "0";
+            accEl.innerText = "100";
+            loadText();
+        }
 
-    init();
-</script>
-
+        loadText();
+    </script>
 </body>
 </html>
